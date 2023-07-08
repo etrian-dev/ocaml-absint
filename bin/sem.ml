@@ -21,10 +21,33 @@ let sem_cond (rel, var, const) mem = sem_rel rel (read_mem var mem) const
 let rec sem_cmd cmd mem =
   match cmd with
   | Skip -> mem
-  | Seq (c0, c1) -> sem_cmd c1 (sem_cmd c0 mem)
+  | Seq ((_, c0), (_, c1)) -> sem_cmd c1 (sem_cmd c0 mem)
   | Assign (var, expr) -> write_mem var (sem_expr expr mem) mem
   | Input _ -> mem (* Scanf.scanf... *)
   | If (cond, (_, cmd1), (_, cmd2)) ->
       if sem_cond cond mem then sem_cmd cmd1 mem else sem_cmd cmd2 mem
   | While (cond, (_, com)) ->
       if sem_cond cond mem then sem_cmd cmd (sem_cmd com mem) else mem
+
+let print_val idx v = Printf.printf "mem[%d] = %d\n" idx v
+
+let _ =
+  let init_mem = Array.make 10 0 in
+  let newmem = sem_cmd Skip init_mem in
+  Printf.printf "Test 1:\n";
+  Array.iteri print_val newmem
+
+let _ =
+  let init_mem = Array.make 10 0 in
+  let newmem = sem_cmd (Assign (1, Const 10)) init_mem in
+  Printf.printf "\nTest 2:\n";
+  Array.iteri print_val newmem
+
+let _ =
+  let init_mem = Array.make 10 0 in
+  let newmem = sem_cmd (Seq(
+    (0, Assign(1, Const 5)),
+    (1, Assign(2, Bop(Mul, Var(1), Bop(Add, Const 2, Const 1)))
+  ))) init_mem in
+  Printf.printf "\nTest 3:\n";
+  Array.iteri print_val newmem

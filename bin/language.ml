@@ -8,12 +8,11 @@ type cond = rel * var * const
 
 type cmd =
   | Skip
-  | Seq of cmd * cmd
+  | Seq of com * com
   | Assign of var * expr
   | Input of var
   | If of cond * com * com
   | While of cond * com
-
 and com = label * cmd
 
 type mem = const array
