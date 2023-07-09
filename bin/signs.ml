@@ -67,8 +67,8 @@ let print_abs_val idx a =
   let s = match a with
   | Atop -> "⊤"
   | Abot -> "⊥"
-  | Apos -> "⊕"
-  | Aneg -> "⊖"
+  | Apos -> "Apos"
+  | Aneg -> "Aneg"
   in Printf.printf "amem[%d] = %s\n" idx s
 
 let _ = val_incl Abot Abot

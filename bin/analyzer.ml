@@ -27,10 +27,16 @@ let rec abs_command cmd pre =
     let new_aenv = write_mem var (abs_expr expr pre) pre in
     if nr_is_bot new_aenv then nr_bot new_aenv else new_aenv
   | Input _var -> nr_bot pre (* TODO *)
+  (* FIXME: analysis is correct only for simple cases *)
   | If (cond, (_, then_cmd), (_, else_cmd)) ->
-    if nr_is_bot (abs_cond cond pre)
-    then abs_command then_cmd pre
-    else abs_command else_cmd pre
+    let cond_aenv = abs_cond cond pre in
+    let then_aenv = abs_command then_cmd cond_aenv in
+    let comp_cond = match cond with
+      | (Rle, var, cnst) -> (Rgt, var, cnst)
+      | (Rgt, var, cnst) -> (Rle, var, cnst) in
+    let cond_alt_aenv = abs_cond comp_cond pre in
+    let else_aenv = abs_command else_cmd cond_alt_aenv in
+    nr_join then_aenv else_aenv
   | While (cond, (_, cmd)) ->
       let new_aenv = abs_cond cond pre in
       if nr_is_bot new_aenv then pre
