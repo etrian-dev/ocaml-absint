@@ -13,6 +13,7 @@ type cmd =
   | Input of var
   | If of cond * com * com
   | While of cond * com
+
 and com = label * cmd
 
 type mem = const array

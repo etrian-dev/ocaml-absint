@@ -12,13 +12,16 @@ open Analyzer
 *)
 let _ =
   let init_mem = Array.make 5 Signs.Atop in
-  let prog = Seq(
-    (0, Assign(0, Const 1)),
-    (1, Seq(
-      (2, While((Rle, 0, 10), (3, Assign(0, Bop(Add, Var(1), Const 1))))),
-      (4, Assign(0, Const (-5)))
-    ))
-   ) in
+  let prog =
+    Seq
+      ( (0, Assign (0, Const 1)),
+        ( 1,
+          Seq
+            ( ( 2,
+                While ((Rle, 0, 10), (3, Assign (0, Bop (Add, Var 1, Const 1))))
+              ),
+              (4, Assign (0, Const (-5))) ) ) )
+  in
   Printf.printf "\nBefore the analysis:\n";
   Array.iteri print_abs_val init_mem;
   let analysis = abs_command prog init_mem in
@@ -37,13 +40,16 @@ let _ =
 *)
 let _ =
   let init_mem = Array.make 5 Signs.Atop in
-  let prog = Seq(
-    (0, Assign(0, Const 1)),
-    (1, Seq(
-      (2, While((Rle, 0, 10), (3, Assign(0, Bop(Add, Var(1), Const 1))))),
-      (4, Assign(0, Const (-5)))
-    ))
-   ) in
+  let prog =
+    Seq
+      ( (0, Assign (0, Const 1)),
+        ( 1,
+          Seq
+            ( ( 2,
+                While ((Rle, 0, 10), (3, Assign (0, Bop (Add, Var 1, Const 1))))
+              ),
+              (4, Assign (0, Const (-5))) ) ) )
+  in
   Printf.printf "\nBefore the analysis:\n";
   Array.iteri print_abs_val init_mem;
   let analysis = abs_command prog init_mem in
@@ -61,10 +67,11 @@ let _ =
 *)
 let _ =
   let init_mem = Array.make 5 Signs.Atop in
-  let prog = Seq(
-    (0, Assign(0, Const 1)),
-    (1, While((Rgt, 0, 0), (2, Assign(0, Bop(Add, Var(1), Const 1)))))
-  ) in
+  let prog =
+    Seq
+      ( (0, Assign (0, Const 1)),
+        (1, While ((Rgt, 0, 0), (2, Assign (0, Bop (Add, Var 1, Const 1))))) )
+  in
   Printf.printf "\nBefore the analysis:\n";
   Array.iteri print_abs_val init_mem;
   let analysis = abs_command prog init_mem in
@@ -85,11 +92,7 @@ let _ =
 *)
 let _ =
   let init_mem = Array.make 5 Signs.Atop in
-  let prog = If(
-    (Rgt, 0, 1),
-    (0, Skip),
-    (1, Assign(0, Const 1))
-  ) in
+  let prog = If ((Rgt, 0, 1), (0, Skip), (1, Assign (0, Const 1))) in
   Printf.printf "\nBefore the analysis:\n";
   Array.iteri print_abs_val init_mem;
   let analysis = abs_command prog init_mem in
@@ -107,22 +110,19 @@ if( x_0 > 1 ) {
 }
 
 pre: T for all vars
-post: T for all vars, except x_1 = Apos and x_2 = Apos
+post: T for all vars, except x_1 = Apos
 *)
 let _ =
-let init_mem = Array.make 5 Signs.Atop in
-let prog = If(
-  (Rgt, 0, 1),
-  (0, Assign(0, Const 10)),
-  (1, Seq(
-    (1, Assign(2, Const 10)),
-    (2, Assign(1, Var 2))
-  ))
-) in
-Printf.printf "\nBefore the analysis:\n";
-Array.iteri print_abs_val init_mem;
-let analysis = abs_command prog init_mem in
-Printf.printf "\nAfter the analysis:\n";
-assert (read_mem 1 analysis = Apos); (* This fails *)
-assert (read_mem 2 analysis = Apos);
-Array.iteri print_abs_val analysis
+  let init_mem = Array.make 5 Signs.Atop in
+  let prog =
+    If
+      ( (Rgt, 0, 1),
+        (0, Assign (1, Const 10)),
+        (1, Seq ((1, Assign (2, Const 10)), (2, Assign (1, Var 2)))) )
+  in
+  Printf.printf "\nBefore the analysis:\n";
+  Array.iteri print_abs_val init_mem;
+  let analysis = abs_command prog init_mem in
+  Printf.printf "\nAfter the analysis:\n";
+  assert (read_mem 1 analysis = Apos);
+  Array.iteri print_abs_val analysis

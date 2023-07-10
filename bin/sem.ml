@@ -45,9 +45,12 @@ let _ =
 
 let _ =
   let init_mem = Array.make 10 0 in
-  let newmem = sem_cmd (Seq(
-    (0, Assign(1, Const 5)),
-    (1, Assign(2, Bop(Mul, Var(1), Bop(Add, Const 2, Const 1)))
-  ))) init_mem in
+  let newmem =
+    sem_cmd
+      (Seq
+         ( (0, Assign (1, Const 5)),
+           (1, Assign (2, Bop (Mul, Var 1, Bop (Add, Const 2, Const 1)))) ))
+      init_mem
+  in
   Printf.printf "\nTest 3:\n";
   Array.iteri print_val newmem

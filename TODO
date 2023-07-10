@@ -1,0 +1,5 @@
+- Implement tests using some testing framework
+- Implement logging to debug the analysis easily
+- Add transitional sem
+- Extend the language with pointers, malloc and related analyses
+- Revise the correctness of loop analysis
