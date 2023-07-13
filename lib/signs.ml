@@ -77,18 +77,16 @@ let print_abs_val idx a =
   in
   Printf.printf "amem[%d] = %s\n" idx s
 
-let _ = val_incl Abot Abot
-let _ = val_incl Atop Apos
-let _ = val_incl Aneg Apos
-let _ = val_cnst 10
+let abs_eq a b =
+  match (a, b) with
+  | Atop, Atop | Abot, Abot | Apos, Apos | Aneg, Aneg -> true
+  | _ -> false
 
-let _ =
-  let init_amem = Array.make 10 Abot in
-  Printf.printf "\nTest 4:\n";
-  Array.iteri print_abs_val init_amem
+let%test "⊥ <= ⊥" = val_incl Abot Abot
+let%test "⊤ <= Apos" = val_incl Atop Apos
+let%test "Aneg <= Apos " = not (val_incl Aneg Apos)
+let%test "Apos <= Const 10" = val_incl Apos (val_cnst 10)
+let%test "abs eq 1" = abs_eq Abot Abot
+let%test "abs eq 2" = abs_eq Apos (val_cnst 10)
 
-let _ =
-  let init_amem = Array.make 10 Atop in
-  let newmem = write_mem 3 Apos init_amem in
-  Printf.printf "\nTest 4:\n";
-  Array.iteri print_abs_val newmem
+(* TODO: tests for other operators as well *)

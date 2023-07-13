@@ -1,0 +1,144 @@
+open Absint_lib.Analyzer
+open Absint_lib.Signs
+open Absint_lib.Language
+
+let mem_init n value = Array.make n value
+
+let pp a = function
+  | Atop -> Fmt.pf a "T"
+  | Abot -> Fmt.pf a "⊥"
+  | Apos -> Fmt.pf a ">= 0"
+  | Aneg -> Fmt.pf a "<= 0"
+
+let abs_cmp a b = a = b
+let testable_abs_val = Alcotest.array (Alcotest.testable pp abs_cmp)
+
+(*
+Analyze the program
+
+x_0 = 1;
+while(x_0 <= 10) { x_0 = x_0 + 1; }
+
+pre: T for all vars
+post: T for all vars, except x_0 is Apos
+*)
+let test_while1 () =
+  Alcotest.(check testable_abs_val)
+    "Pre: all Top, Post: all Top except x_0 >= 0"
+    [| Apos; Atop; Atop; Atop; Atop |]
+    (let prog =
+       Seq
+         ( (0, Assign (0, Const 1)),
+           (1, While ((Rle, 0, 10), (2, Assign (0, Bop (Add, Var 0, Const 1)))))
+         )
+     in
+     abs_command prog (mem_init 5 Atop))
+
+(*
+  Analyze the program
+
+  x_0 = 1;
+  while(x_0 <= 10) { x_0 = x_0 + 1; }
+  x_0 = -5
+
+  pre: T for all vars
+  post: T for all vars, except x_0 is Aneg
+*)
+let test_while2 () =
+  Alcotest.(check testable_abs_val)
+    "Pre: all Top, Post: all Top except x_0 <= 0"
+    [| Aneg; Atop; Atop; Atop; Atop |]
+    (let prog =
+       Seq
+         ( (0, Assign (0, Const 1)),
+           ( 1,
+             Seq
+               ( ( 2,
+                   While
+                     ((Rle, 0, 10), (3, Assign (0, Bop (Add, Var 0, Const 1))))
+                 ),
+                 (4, Assign (0, Const (-5))) ) ) )
+     in
+     abs_command prog (mem_init 5 Atop))
+
+(*
+  Analyze the program
+
+  x_0 = 1;
+  while(x_0 >= 0) { x_0 = x_0 + 1 }
+
+  pre: T for all vars
+  post: T for all vars
+*)
+let test_while3 () =
+  Alcotest.(check testable_abs_val)
+    "Pre: all Top, Post: all Top"
+    [| Atop; Atop; Atop; Atop; Atop |]
+    (let prog =
+       Seq
+         ( (0, Assign (0, Const 1)),
+           (1, While ((Rgt, 0, 0), (2, Assign (0, Bop (Add, Var 1, Const 1)))))
+         )
+     in
+     abs_command prog (mem_init 5 Atop))
+
+(*
+  Analyze the program
+
+  if( x_0 > 1 ) {
+    ;
+  } else {
+    x_0 = 1;
+  }
+
+  pre: T for all vars
+  post: T for all vars, except x_0 = Apos
+*)
+let test_if1 () =
+  Alcotest.(check testable_abs_val)
+    "Pre: all Top, Post: all Top except x_0 >= 0"
+    [| Apos; Atop; Atop; Atop; Atop |]
+    (let prog = If ((Rgt, 0, 1), (0, Skip), (1, Assign (0, Const 1))) in
+     abs_command prog (mem_init 5 Atop))
+
+(*
+Analyze the program
+
+if( x_0 > 1 ) {
+  x_1 = 10;
+} else {
+  x_2 = 10;
+  x_1 = x_2;
+}
+
+pre: T for all vars
+post: T for all vars, except x_1 = Apos
+*)
+let test_if2 () =
+  Alcotest.(check testable_abs_val)
+    "Pre: all Top, Post: all Top except x_0 >= 0"
+    [| Apos; Atop; Atop; Atop; Atop |]
+    (let prog =
+       If
+         ( (Rgt, 0, 1),
+           (0, Assign (1, Const 10)),
+           (1, Seq ((1, Assign (2, Const 10)), (2, Assign (1, Var 2)))) )
+     in
+     abs_command prog (mem_init 5 Atop))
+
+let while_tests =
+  ( "While tests",
+    [
+      Alcotest.test_case "Infer Apos" `Quick test_while1;
+      Alcotest.test_case "Infer Aneg" `Quick test_while2;
+      Alcotest.test_case "Keep Atop" `Quick test_while3;
+    ] )
+
+let if_tests =
+  ( "If tests",
+    [
+      Alcotest.test_case "Infer Apos" `Quick test_if1;
+      Alcotest.test_case "Infer Apos" `Quick test_if2;
+    ] )
+
+let () = Alcotest.run "Analyzer test suite" [ while_tests; if_tests ]

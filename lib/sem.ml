@@ -31,19 +31,17 @@ let rec sem_cmd cmd mem =
 
 let print_val idx v = Printf.printf "mem[%d] = %d\n" idx v
 
-let _ =
+let%test "skip cmd" =
   let init_mem = Array.make 10 0 in
   let newmem = sem_cmd Skip init_mem in
-  Printf.printf "Test 1:\n";
-  Array.iteri print_val newmem
+  Array.for_all2 ( = ) init_mem newmem
 
-let _ =
+let%test "assign cmd" =
   let init_mem = Array.make 10 0 in
   let newmem = sem_cmd (Assign (1, Const 10)) init_mem in
-  Printf.printf "\nTest 2:\n";
-  Array.iteri print_val newmem
+  Array.for_all2 ( = ) init_mem newmem
 
-let _ =
+let%test "seq cmd" =
   let init_mem = Array.make 10 0 in
   let newmem =
     sem_cmd
@@ -52,5 +50,4 @@ let _ =
            (1, Assign (2, Bop (Mul, Var 1, Bop (Add, Const 2, Const 1)))) ))
       init_mem
   in
-  Printf.printf "\nTest 3:\n";
-  Array.iteri print_val newmem
+  Array.for_all2 ( = ) init_mem newmem

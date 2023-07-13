@@ -5,11 +5,11 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github etrian-dev/ocaml-absint))
 
-(authors "Author Name")
+(authors "Nicola Vetrini")
 
-(maintainers "Maintainer Name")
+(maintainers "Nicola Vetrini")
 
 (license LICENSE)
 
@@ -19,7 +19,10 @@
  (name absint)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune)
+ (depends
+  ocaml
+  dune
+  (alcotest :with-test))
  (tags
   (topics "to describe" your project)))
 

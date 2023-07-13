@@ -2,4 +2,4 @@
  (public_name absint)
  (name absint)
  (modes byte exe)
- (libraries absint))
+ (libraries absint_lib))
