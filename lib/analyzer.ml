@@ -13,6 +13,7 @@ let rec abs_expr expr aenv =
 
 (* Analysis of conditionals in the abstract domain *)
 let abs_cond (rel, var, cnst) aenv =
+  print_cond (rel, var, cnst);
   let new_aval = val_sat rel cnst (read_mem var aenv) in
   if new_aval = val_bot then nr_bot aenv else write_mem var new_aval aenv
 
@@ -31,26 +32,20 @@ let rec abs_command cmd pre =
       if nr_is_bot new_aenv then nr_bot new_aenv else new_aenv
   | Input _var -> nr_bot pre (* TODO *)
   | If (cond, (_, then_cmd), (_, else_cmd)) ->
-      let then_pre = abs_cond cond pre in
-      let then_aenv = abs_command then_cmd then_pre in
-      let else_pre = abs_cond (negate_cond cond) pre in
-      let else_aenv = abs_command else_cmd else_pre in
-      (*Printf.printf "\nThen branch pre:\n";
-        Array.iteri print_abs_val then_pre;
-        Printf.printf "\nElse branch pre:\n";
-        Array.iteri print_abs_val else_pre;
-        Printf.printf "\nThen branch post:\n";
-        Array.iteri print_abs_val then_aenv;
-        Printf.printf "\nElse branch post:\n";
-        Array.iteri print_abs_val else_aenv;*)
+      let then_aenv = abs_command then_cmd (abs_cond cond pre) in
+      let else_aenv = abs_command else_cmd (abs_cond (negate_cond cond) pre) in
       nr_join then_aenv else_aenv
   | While (cond, (_, cmd)) ->
       (* refine the cond *)
       let cond_aenv = abs_cond cond pre in
-      (* Get the next abstract iterate *)
-      let next_aenv = abs_command cmd cond_aenv in
-      (* If next <=# current then the lfp has been reached *)
-      if nr_is_le next_aenv pre (* Abstract join with the negated loop cond *)
-      then nr_join (abs_cond (negate_cond cond) next_aenv) pre
-        (* Otherwise keep computing iterates *)
-      else abs_command cmd (nr_join next_aenv pre)
+      if nr_is_bot cond_aenv then abs_cond (negate_cond cond) pre
+      else
+        (* Get the next abstract iterate *)
+        let next_aenv = abs_command cmd cond_aenv in
+        (* If next <=# current then the lfp has been reached *)
+        if nr_is_le next_aenv pre then
+          (* Abstract join with the negated loop cond *)
+          nr_join cond_aenv pre
+        else
+          (* Otherwise keep computing iterates *)
+          abs_command cmd (nr_join next_aenv pre)

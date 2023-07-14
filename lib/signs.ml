@@ -15,7 +15,7 @@ let val_cnst c = if c < 0 then Aneg else Apos
 (* Checks whether the abstract value a0 <=# a1 *)
 let val_incl a0 a1 =
   match (a0, a1) with
-  | Abot, _ | Atop, Atop | Apos, Apos | Aneg, Aneg -> true
+  | Abot, _ | _, Atop | Apos, Apos | Aneg, Aneg -> true
   | _ -> false
 
 (* Abstract join operation *)
@@ -51,8 +51,8 @@ let val_binop op a0 a1 =
 let val_sat cond cnst abs =
   match abs with
   | Abot -> Abot
-  | Apos -> if cond = Rgt && cnst >= 0 then Apos else Abot
-  | Aneg -> if cond = Rle && cnst <= 0 then Aneg else Abot
+  | Apos -> if cond = Rle && cnst < 0 then Abot else Apos
+  | Aneg -> if cond = Rgt && cnst > 0 then Abot else Aneg
   | Atop ->
       if cond = Rle && cnst <= 0 then Aneg
       else if cond = Rgt && cnst >= 0 then Apos
@@ -83,7 +83,7 @@ let abs_eq a b =
   | _ -> false
 
 let%test "⊥ <= ⊥" = val_incl Abot Abot
-let%test "⊤ <= Apos" = val_incl Atop Apos
+let%test "Apos <= ⊤" = val_incl Apos Atop
 let%test "Aneg <= Apos " = not (val_incl Aneg Apos)
 let%test "Apos <= Const 10" = val_incl Apos (val_cnst 10)
 let%test "abs eq 1" = abs_eq Abot Abot

@@ -22,3 +22,5 @@ val read_mem : int -> 'a array -> 'a
 val write_mem : int -> 'a -> 'a array -> 'a array
 
 type state = label * mem
+
+val print_cond : rel * var * const -> unit

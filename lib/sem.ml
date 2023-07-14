@@ -38,16 +38,18 @@ let%test "skip cmd" =
 
 let%test "assign cmd" =
   let init_mem = Array.make 10 0 in
-  let newmem = sem_cmd (Assign (1, Const 10)) init_mem in
-  Array.for_all2 ( = ) init_mem newmem
+  let newmem = sem_cmd (Assign (0, Const 10)) init_mem in
+  newmem.(0) == 10 && Array.for_all (fun a -> a == 0) (Array.sub newmem 1 9)
 
 let%test "seq cmd" =
   let init_mem = Array.make 10 0 in
   let newmem =
     sem_cmd
       (Seq
-         ( (0, Assign (1, Const 5)),
-           (1, Assign (2, Bop (Mul, Var 1, Bop (Add, Const 2, Const 1)))) ))
+         ( (0, Assign (0, Const 5)),
+           (1, Assign (1, Bop (Mul, Var 0, Bop (Add, Const 2, Const 1)))) ))
       init_mem
   in
-  Array.for_all2 ( = ) init_mem newmem
+  newmem.(0) == 5
+  && newmem.(1) == 15
+  && Array.for_all (fun a -> a == 0) (Array.sub newmem 2 8)

@@ -85,6 +85,26 @@ let test_while3 () =
 (*
   Analyze the program
 
+  x_0 = 5;
+  while ( x_0 <= -1 ) { x_1 = 1; }
+
+  pre: T for all vars
+  post: T for all vars except x_0 >= 0
+*)
+let test_while4 () =
+  Alcotest.(check testable_abs_val)
+    "Pre: all Top, Post: all top except x_0 >= 0"
+    [| Apos; Atop; Atop; Atop; Atop |]
+    (let prog =
+       Seq
+         ( (0, Assign (0, Const 5)),
+           (1, While ((Rle, 0, -1), (2, Assign (1, Const 1)))) )
+     in
+     abs_command prog (mem_init 5 Atop))
+
+(*
+  Analyze the program
+
   if( x_0 > 1 ) {
     ;
   } else {
@@ -117,7 +137,7 @@ post: T for all vars, except x_1 = Apos
 let test_if2 () =
   Alcotest.(check testable_abs_val)
     "Pre: all Top, Post: all Top except x_0 >= 0"
-    [| Apos; Atop; Atop; Atop; Atop |]
+    [| Atop; Apos; Atop; Atop; Atop |]
     (let prog =
        If
          ( (Rgt, 0, 1),
@@ -132,6 +152,7 @@ let while_tests =
       Alcotest.test_case "Infer Apos" `Quick test_while1;
       Alcotest.test_case "Infer Aneg" `Quick test_while2;
       Alcotest.test_case "Keep Atop" `Quick test_while3;
+      Alcotest.test_case "Infer Apos, do not infer Aneg" `Quick test_while4;
     ] )
 
 let if_tests =

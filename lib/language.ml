@@ -28,3 +28,7 @@ let write_mem var c mem =
   new_mem
 
 type state = label * mem
+
+let print_cond (rel, var, cnst) =
+  let rel_str = if rel = Rle then "<=" else ">=" in
+  Printf.printf "x_%d %s %d" var rel_str cnst
