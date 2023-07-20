@@ -16,6 +16,12 @@ let val_incl a0 a1 =
   | Abot, _ | _, Atop | Apos, Apos | Aneg, Aneg -> true
   | _ -> false
 
+(* tests *)
+let%test "⊥ <= ⊥" = val_incl Abot Abot
+let%test "Apos <= ⊤" = val_incl Apos Atop
+let%test "Aneg <= Apos " = not (val_incl Aneg Apos)
+let%test "Apos <= Const 10" = val_incl Apos (val_cnst 10)
+
 (* Abstract join operation *)
 let val_join a0 a1 =
   match (a0, a1) with
@@ -80,10 +86,6 @@ let abs_eq a b =
   | Atop, Atop | Abot, Abot | Apos, Apos | Aneg, Aneg -> true
   | _ -> false
 
-let%test "⊥ <= ⊥" = val_incl Abot Abot
-let%test "Apos <= ⊤" = val_incl Apos Atop
-let%test "Aneg <= Apos " = not (val_incl Aneg Apos)
-let%test "Apos <= Const 10" = val_incl Apos (val_cnst 10)
 let%test "abs eq 1" = abs_eq Abot Abot
 let%test "abs eq 2" = abs_eq Apos (val_cnst 10)
 
