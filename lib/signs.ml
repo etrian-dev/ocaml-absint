@@ -7,8 +7,6 @@ type abs_val = Atop | Abot | Aneg | Apos
 let val_bot = Abot
 let val_top = Atop
 
-type nr_abs = abs_val array
-
 (* Maps a constant to an abstract element *)
 let val_cnst c = if c < 0 then Aneg else Apos
 

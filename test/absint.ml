@@ -1,4 +1,4 @@
-open Absint_lib.Analyzer
+open Absint_lib.Analyzer.Signs_Analyzer
 open Absint_lib.Signs
 open Absint_lib.Language
 

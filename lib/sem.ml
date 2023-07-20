@@ -1,6 +1,10 @@
 open Language
 
-(* Semantic of a binary expression: a function bop -> const -> const -> const *)
+(** Semantic of a binary expression
+    @param op The binary operator. See type [Language.bop]
+    @param c1 Left operand, constant
+    @param c2 Right operand, constant
+    @return The result of [c1 op c2] *)
 let sem_bop op c1 c2 =
   match op with Add -> c1 + c2 | Sub -> c1 - c2 | Mul -> c1 * c2
 
