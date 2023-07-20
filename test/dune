@@ -1,3 +1,9 @@
 (test
- (name absint)
+ (name signs)
+ (modules signs)
+ (libraries absint_lib alcotest))
+
+(test
+ (name intervals)
+ (modules intervals)
  (libraries absint_lib alcotest))
