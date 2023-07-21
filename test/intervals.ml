@@ -29,8 +29,8 @@ post: T for all vars, except x_0 in [0, 10]
 *)
 let test_while1 () =
   Alcotest.(check testable_abs_val)
-    "Pre: all Top, Post: all Top except x_0 >= 0"
-    [| Interval (Val 0, Val 10); val_top; val_top; val_top; val_top |]
+    "Pre: all Top, Post: all Top except x_0 in [1, 11]"
+    [| Interval (Val 1, Val 11); val_top; val_top; val_top; val_top |]
     (let prog =
        Seq
          ( (0, Assign (0, Const 1)),
@@ -47,12 +47,12 @@ let test_while1 () =
   x_0 = -5
 
   pre: T for all vars
-  post: T for all vars, except x_0 in [-5, 10]
+  post: T for all vars, except x_0 in [-5, -5]
 *)
 let test_while2 () =
   Alcotest.(check testable_abs_val)
     "Pre: all Top, Post: all Top except x_0 <= 0"
-    [| Interval (Val (-5), Val 10); val_top; val_top; val_top; val_top |]
+    [| Interval (Val (-5), Val (-5)); val_top; val_top; val_top; val_top |]
     (let prog =
        Seq
          ( (0, Assign (0, Const 1)),
@@ -97,8 +97,8 @@ let test_while3 () =
 *)
 let test_while4 () =
   Alcotest.(check testable_abs_val)
-    "Pre: all Top, Post: all top except x_0 >= 0"
-    [| Interval (Val 0, Inf_Pos); val_top; val_top; val_top; val_top |]
+    "Pre: all Top, Post: all top except x_0 in [5, 5]"
+    [| Interval (Val 5, Val 5); val_top; val_top; val_top; val_top |]
     (let prog =
        Seq
          ( (0, Assign (0, Const 5)),
@@ -116,12 +116,12 @@ let test_while4 () =
   }
 
   pre: T for all vars
-  post: T for all vars, except x_0 in [0, +inf]
+  post: T for all vars, except x_0 in [1, +inf]
 *)
 let test_if1 () =
   Alcotest.(check testable_abs_val)
     "Pre: all Top, Post: all Top except x_0 >= 0"
-    [| Interval (Val 0, Inf_Pos); val_top; val_top; val_top; val_top |]
+    [| Interval (Val 1, Inf_Pos); val_top; val_top; val_top; val_top |]
     (let prog = If ((Rgt, 0, 1), (0, Skip), (1, Assign (0, Const 1))) in
      abs_command prog (mem_init 5 val_top))
 
@@ -141,13 +141,7 @@ post: T for all vars, except x_1 = Apos
 let test_if2 () =
   Alcotest.(check testable_abs_val)
     "Pre: all Top, Post: all Top except x_0 >= 0"
-    [|
-      val_top;
-      Interval (Val 10, Val 10);
-      Interval (Val 0, Val 10);
-      val_top;
-      val_top;
-    |]
+    [| val_top; Interval (Val 10, Val 10); val_top; val_top; val_top |]
     (let prog =
        If
          ( (Rgt, 0, 1),

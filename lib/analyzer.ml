@@ -21,6 +21,9 @@ end
 
 (* The Analyzer module is a functor, i.e., a module parametrized by the analysis domain to be used. *)
 module Analyzer (Dom : Domain) = struct
+  (**Instantiate the print function for the analysis domain *)
+  let print_abs_val idx arr = Dom.print_abs_val idx arr.(idx)
+
   (** Analysis of expressions in the abstract domain *)
   let rec abs_expr expr aenv =
     match expr with
@@ -56,13 +59,13 @@ module Analyzer (Dom : Domain) = struct
           abs_command else_cmd (abs_cond (negate_cond cond) pre)
         in
         Dom.nr_join then_aenv else_aenv
-    | While (cond, (_, cmd)) ->
+    | While (cond, (_, c)) ->
         (* refine the cond *)
         let cond_aenv = abs_cond cond pre in
         if Dom.nr_is_bot cond_aenv then abs_cond (negate_cond cond) pre
         else
           (* Get the next abstract iterate *)
-          let next_aenv = abs_command cmd cond_aenv in
+          let next_aenv = abs_command c cond_aenv in
           (* If next <=# current then the lfp has been reached *)
           if Dom.nr_is_le next_aenv pre then
             (* Abstract join with the negated loop cond *)
@@ -70,9 +73,6 @@ module Analyzer (Dom : Domain) = struct
           else
             (* Otherwise keep computing iterates *)
             abs_command cmd (Dom.nr_join next_aenv pre)
-
-  (**Instantiate the print function for the analysis domain *)
-  let print_abs_val idx arr = Dom.print_abs_val idx arr.(idx)
 end
 
 module Interval_Analyzer = Analyzer (Intervals)

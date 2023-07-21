@@ -101,6 +101,25 @@ let val_sat cond cnst (Interval (l, h)) =
   | Rgt ->
       if le_ext h (Val cnst) then val_bot else Interval (max (Val cnst) l, h)
 
+let%test "Rle 10 [1, 100] = [1, 10]" =
+  Interval (Val 1, Val 10) = val_sat Rle 10 (Interval (Val 1, Val 100))
+
+let%test "Rgt 10 [20, 30] = [20, 30]" =
+  Interval (Val 20, Val 30) = val_sat Rgt 10 (Interval (Val 20, Val 30))
+
+let%test "Rgt 10 [-oo, 5] = [+oo, -oo]" =
+  Interval (Inf_Pos, Inf_Neg) = val_sat Rgt 10 (Interval (Inf_Neg, Val 5))
+
+let%test "Rle 10 ((Rle 10 [1, 1]) + [1, 1]) = [2, 2]" =
+  Interval (Val 2, Val 2)
+  = val_sat Rle 10
+      (val_binop Add
+         (val_sat Rle 10 (Interval (Val 1, Val 1)))
+         (Interval (Val 1, Val 1)))
+
+let%test "Rle 10 [-oo, +oo] = [-oo, 10]" =
+  Interval (Inf_Neg, Val 10) = val_sat Rle 10 (Interval (Inf_Neg, Inf_Pos))
+
 (* Decide whether the abstract env1 <=# env2, i.e., for all (a,b) in abs1 x abs2. a <=# b *)
 let nr_is_le aenv1 aenv2 = Array.for_all2 val_incl aenv1 aenv2
 
