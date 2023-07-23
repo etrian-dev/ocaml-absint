@@ -89,36 +89,53 @@ let val_binop op a b =
   | Add -> op_ext ( + ) a b
   | Sub -> op_ext ( - ) a b
   | Mul -> op_ext ( * ) a b
+  | Div -> op_ext ( / ) a b
 
 let%test "[2, 7] + [1, 5] = [3, 12]" =
   Interval (Val 3, Val 12)
   = val_binop Add (Interval (Val 2, Val 7)) (Interval (Val 1, Val 5))
 
+let val_uop op (Interval (l, h)) =
+  match op with
+  | Minus -> (
+      match (l, h) with
+      | Val vl, Val vh -> Interval (Val (-vh), Val (-vl))
+      | Inf_Neg, Val vh -> Interval (Val (-vh), Inf_Pos)
+      | Val vl, Inf_Pos -> Interval (Inf_Neg, Val (-vl))
+      | _ -> val_bot)
+
+let%test "- [1, 2] = [-2, -1]" =
+  Interval (Val (-2), Val (-1)) = val_uop Minus (Interval (Val 1, Val 2))
+
 let val_sat cond cnst (Interval (l, h)) =
   match cond with
-  | Rle ->
-      if le_ext (Val cnst) l then val_bot else Interval (l, min (Val cnst) h)
-  | Rgt ->
-      if le_ext h (Val cnst) then val_bot else Interval (max (Val cnst) l, h)
+  | Lt ->
+      if le_ext (Val cnst) l || Val cnst = l then val_bot
+      else Interval (l, min (Val cnst) h)
+  | Le -> if le_ext (Val cnst) l then val_bot else Interval (l, min (Val cnst) h)
+  | Gt ->
+      if le_ext h (Val cnst) || Val cnst = h then val_bot
+      else Interval (max (Val cnst) l, h)
+  | Ge -> if le_ext h (Val cnst) then val_bot else Interval (max (Val cnst) l, h)
 
-let%test "Rle 10 [1, 100] = [1, 10]" =
-  Interval (Val 1, Val 10) = val_sat Rle 10 (Interval (Val 1, Val 100))
+let%test "Le 10 [1, 100] = [1, 10]" =
+  Interval (Val 1, Val 10) = val_sat Le 10 (Interval (Val 1, Val 100))
 
-let%test "Rgt 10 [20, 30] = [20, 30]" =
-  Interval (Val 20, Val 30) = val_sat Rgt 10 (Interval (Val 20, Val 30))
+let%test "Gt 10 [20, 30] = [20, 30]" =
+  Interval (Val 20, Val 30) = val_sat Gt 10 (Interval (Val 20, Val 30))
 
-let%test "Rgt 10 [-oo, 5] = [+oo, -oo]" =
-  Interval (Inf_Pos, Inf_Neg) = val_sat Rgt 10 (Interval (Inf_Neg, Val 5))
+let%test "Gt 10 [-oo, 5] = [+oo, -oo]" =
+  Interval (Inf_Pos, Inf_Neg) = val_sat Gt 10 (Interval (Inf_Neg, Val 5))
 
-let%test "Rle 10 ((Rle 10 [1, 1]) + [1, 1]) = [2, 2]" =
+let%test "Le 10 ((Le 10 [1, 1]) + [1, 1]) = [2, 2]" =
   Interval (Val 2, Val 2)
-  = val_sat Rle 10
+  = val_sat Le 10
       (val_binop Add
-         (val_sat Rle 10 (Interval (Val 1, Val 1)))
+         (val_sat Le 10 (Interval (Val 1, Val 1)))
          (Interval (Val 1, Val 1)))
 
-let%test "Rle 10 [-oo, +oo] = [-oo, 10]" =
-  Interval (Inf_Neg, Val 10) = val_sat Rle 10 (Interval (Inf_Neg, Inf_Pos))
+let%test "Le 10 [-oo, +oo] = [-oo, 10]" =
+  Interval (Inf_Neg, Val 10) = val_sat Le 10 (Interval (Inf_Neg, Inf_Pos))
 
 (* Decide whether the abstract env1 <=# env2, i.e., for all (a,b) in abs1 x abs2. a <=# b *)
 let nr_is_le aenv1 aenv2 = Array.for_all2 val_incl aenv1 aenv2

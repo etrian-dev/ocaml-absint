@@ -6,17 +6,29 @@ open Language
     @param c2 Right operand, constant
     @return The result of [c1 op c2] *)
 let sem_bop op c1 c2 =
-  match op with Add -> c1 + c2 | Sub -> c1 - c2 | Mul -> c1 * c2
+  match op with
+  | Add -> c1 + c2
+  | Sub -> c1 - c2
+  | Mul -> c1 * c2
+  | Div -> c1 / c2
+
+let sem_uop op c1 = match op with Minus -> -c1
 
 (* Semantic of an expression: a function expr -> mem -> const *)
 let rec sem_expr expr mem =
   match expr with
   | Const c -> c
   | Var v -> read_mem v mem
+  | Uop (op, exp) -> sem_uop op (sem_expr exp mem)
   | Bop (op, lhs, rhs) -> sem_bop op (sem_expr lhs mem) (sem_expr rhs mem)
 
 (* Semantic of a relation: a function rel -> expr -> expr -> bool *)
-let sem_rel rel v0 v1 = match rel with Rle -> v0 <= v1 | Rgt -> v0 > v1
+let sem_rel rel v0 v1 =
+  match rel with
+  | Lt -> v0 < v1
+  | Le -> v0 <= v1
+  | Gt -> v0 > v1
+  | Ge -> v0 >= v1
 
 (* Semantic of a condition: a function cond -> mem -> bool *)
 let sem_cond (rel, var, const) mem = sem_rel rel (read_mem var mem) const

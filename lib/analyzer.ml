@@ -10,6 +10,7 @@ module type Domain = sig
   val val_cnst : const -> abs_val
   val val_incl : abs_val -> abs_val -> bool
   val val_join : abs_val -> abs_val -> abs_val
+  val val_uop : uop -> abs_val -> abs_val
   val val_binop : bop -> abs_val -> abs_val -> abs_val
   val val_sat : rel -> const -> abs_val -> abs_val
   val nr_is_le : abs_val array -> abs_val array -> bool
@@ -30,6 +31,7 @@ module Analyzer (Dom : Domain) = struct
     | Const c -> Dom.val_cnst c
     | Var x -> read_mem x aenv
     | Bop (op, e1, e2) -> Dom.val_binop op (abs_expr e1 aenv) (abs_expr e2 aenv)
+    | Uop (op, e) -> Dom.val_uop op (abs_expr e aenv)
 
   (** Analysis of conditionals in the abstract domain *)
   let abs_cond (rel, var, cnst) aenv =
@@ -41,8 +43,10 @@ module Analyzer (Dom : Domain) = struct
   (** Helper function to negate cond, language-dependent *)
   let negate_cond cond =
     match cond with
-    | Rle, var, cnst -> (Rgt, var, cnst)
-    | Rgt, var, cnst -> (Rle, var, cnst)
+    | Lt, var, cnst -> (Ge, var, cnst)
+    | Le, var, cnst -> (Gt, var, cnst)
+    | Gt, var, cnst -> (Le, var, cnst)
+    | Ge, var, cnst -> (Lt, var, cnst)
 
   (** Analysis of commands, language-dependent *)
   let rec abs_command cmd pre =

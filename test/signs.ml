@@ -29,7 +29,7 @@ let test_while1 () =
     (let prog =
        Seq
          ( (0, Assign (0, Const 1)),
-           (1, While ((Rle, 0, 10), (2, Assign (0, Bop (Add, Var 0, Const 1)))))
+           (1, While ((Le, 0, 10), (2, Assign (0, Bop (Add, Var 0, Const 1)))))
          )
      in
      abs_command prog (mem_init 5 Atop))
@@ -55,7 +55,7 @@ let test_while2 () =
              Seq
                ( ( 2,
                    While
-                     ((Rle, 0, 10), (3, Assign (0, Bop (Add, Var 0, Const 1))))
+                     ((Le, 0, 10), (3, Assign (0, Bop (Add, Var 0, Const 1))))
                  ),
                  (4, Assign (0, Const (-5))) ) ) )
      in
@@ -77,7 +77,7 @@ let test_while3 () =
     (let prog =
        Seq
          ( (0, Assign (0, Const 1)),
-           (1, While ((Rgt, 0, 0), (2, Assign (0, Bop (Add, Var 1, Const 1)))))
+           (1, While ((Gt, 0, 0), (2, Assign (0, Bop (Add, Var 1, Const 1)))))
          )
      in
      abs_command prog (mem_init 5 Atop))
@@ -98,7 +98,7 @@ let test_while4 () =
     (let prog =
        Seq
          ( (0, Assign (0, Const 5)),
-           (1, While ((Rle, 0, -1), (2, Assign (1, Const 1)))) )
+           (1, While ((Le, 0, -1), (2, Assign (1, Const 1)))) )
      in
      abs_command prog (mem_init 5 Atop))
 
@@ -118,7 +118,7 @@ let test_if1 () =
   Alcotest.(check testable_abs_val)
     "Pre: all Top, Post: all Top except x_0 >= 0"
     [| Apos; Atop; Atop; Atop; Atop |]
-    (let prog = If ((Rgt, 0, 1), (0, Skip), (1, Assign (0, Const 1))) in
+    (let prog = If ((Gt, 0, 1), (0, Skip), (1, Assign (0, Const 1))) in
      abs_command prog (mem_init 5 Atop))
 
 (*
@@ -140,7 +140,7 @@ let test_if2 () =
     [| Atop; Apos; Atop; Atop; Atop |]
     (let prog =
        If
-         ( (Rgt, 0, 1),
+         ( (Gt, 0, 1),
            (0, Assign (1, Const 10)),
            (1, Seq ((1, Assign (2, Const 10)), (2, Assign (1, Var 2)))) )
      in

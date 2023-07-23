@@ -5,6 +5,7 @@ val val_top : abs_val
 val val_cnst : int -> abs_val
 val val_incl : abs_val -> abs_val -> bool
 val val_join : abs_val -> abs_val -> abs_val
+val val_uop : Language.uop -> abs_val -> abs_val
 val val_binop : Language.bop -> abs_val -> abs_val -> abs_val
 val val_sat : Language.rel -> int -> abs_val -> abs_val
 val nr_is_le : abs_val array -> abs_val array -> bool

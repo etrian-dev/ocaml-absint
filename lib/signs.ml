@@ -42,7 +42,7 @@ let val_binop op a0 a1 =
       | Aneg, Aneg -> Aneg
       | Abot, _ | _, Abot -> Abot
       | _ -> Atop)
-  | Mul -> (
+  | Mul | Div -> (
       match (a0, a1) with
       | Apos, Apos -> Apos
       | Aneg, Aneg -> Apos
@@ -50,16 +50,21 @@ let val_binop op a0 a1 =
       | Abot, _ | _, Abot -> Abot
       | _ -> Atop)
 
+let val_uop op a =
+  match (op, a) with Minus, Apos -> Aneg | Minus, Aneg -> Apos | _, _ -> a
+
 (* Taking into account condition expressed as a pair cond-const, refines
    the information of abs, producing abs' *)
 let val_sat cond cnst abs =
   match abs with
   | Abot -> Abot
-  | Apos -> if cond = Rle && cnst < 0 then Abot else Apos
-  | Aneg -> if cond = Rgt && cnst > 0 then Abot else Aneg
+  | Apos ->
+      if (cond = Le && cnst < 0) || (cond = Lt && cnst <= 0) then Abot else Apos
+  | Aneg ->
+      if (cond = Ge && cnst > 0) || (cond = Gt && cnst >= 0) then Abot else Aneg
   | Atop ->
-      if cond = Rle && cnst <= 0 then Aneg
-      else if cond = Rgt && cnst >= 0 then Apos
+      if cond = Le && cnst <= 0 then Aneg
+      else if cond = Gt && cnst >= 0 then Apos
       else Atop
 
 (* Decide whether the abstract env1 <=# env2, i.e., for all (a,b) in abs1 x abs2. a <=# b *)
