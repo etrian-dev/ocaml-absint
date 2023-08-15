@@ -3,3 +3,4 @@
 - Add transitional sem
 - Extend the language with pointers, malloc and related analyses
 - Revise the correctness of loop analysis
+- Monadic operators for semantics with side effect that gives a value but also a possibly modified memory (e.g. malloc has a side effect of modifying memory)

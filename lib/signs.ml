@@ -8,7 +8,8 @@ let val_bot = Abot
 let val_top = Atop
 
 (* Maps a constant to an abstract element *)
-let val_cnst c = if c < 0 then Aneg else Apos
+let val_cnst value =
+  match value with Int x -> if x >= 0 then Apos else Aneg | _ -> Atop
 
 (* Checks whether the abstract value a0 <=# a1 *)
 let val_incl a0 a1 =
@@ -20,7 +21,10 @@ let val_incl a0 a1 =
 let%test "⊥ <= ⊥" = val_incl Abot Abot
 let%test "Apos <= ⊤" = val_incl Apos Atop
 let%test "Aneg <= Apos " = not (val_incl Aneg Apos)
-let%test "Apos <= Const 10" = val_incl Apos (val_cnst 10)
+let%test "Apos <= Const 10" = val_incl Apos (val_cnst (Int 10))
+
+let%test "Atop <= Address (Stack x)" =
+  val_incl Atop (val_cnst (Address (Stack 1)))
 
 (* Abstract join operation *)
 let val_join a0 a1 =
@@ -55,36 +59,41 @@ let val_uop op a =
 
 (* Taking into account condition expressed as a pair cond-const, refines
    the information of abs, producing abs' *)
-let val_sat cond cnst abs =
-  match abs with
-  | Abot -> Abot
-  | Apos ->
-      if (cond = Le && cnst < 0) || (cond = Lt && cnst <= 0) then Abot else Apos
-  | Aneg ->
-      if (cond = Ge && cnst > 0) || (cond = Gt && cnst >= 0) then Abot else Aneg
-  | Atop ->
-      if cond = Le && cnst <= 0 then Aneg
-      else if cond = Gt && cnst >= 0 then Apos
+let val_sat cond value abs =
+  match (abs, value) with
+  | Abot, _ -> Abot
+  | Apos, Int v ->
+      if (cond = Le && v < 0) || (cond = Lt && v <= 0) then Abot else Apos
+  | Aneg, Int v ->
+      if (cond = Ge && v > 0) || (cond = Gt && v >= 0) then Abot else Aneg
+  | Atop, Int v ->
+      if cond = Le && v <= 0 then Aneg
+      else if cond = Gt && v >= 0 then Apos
       else Atop
+  (* No info gained if the condition is about an address *)
+  | _, _ -> abs
 
 (* Decide whether the abstract env1 <=# env2, i.e., for all (a,b) in abs1 x abs2. a <=# b *)
-let nr_is_le aenv1 aenv2 = Array.for_all2 val_incl aenv1 aenv2
+let nr_is_le aenv1 aenv2 =
+  Memory.compare (fun v1 v2 -> if val_incl v1 v2 then -1 else 1) aenv1 aenv2
+  == -1
 
 (* Abstract join operation on envs, producing a new abstract env *)
-let nr_join aenv1 aenv2 = Array.map2 val_join aenv1 aenv2
+let nr_join aenv1 aenv2 =
+  Memory.union (fun _k v1 v2 -> Some (val_join v1 v2)) aenv1 aenv2
 
 (* Tests whether the abstract env describes the empty set of stores, that is,
    at least one of its variables is bottom *)
-let nr_is_bot aenv = Array.exists (fun a -> a = Abot) aenv
+let nr_is_bot aenv = Memory.exists (fun _k v -> v = val_bot) aenv
 
 (* Brings an abstract env to bottom *)
-let nr_bot aenv = Array.map (fun _a -> Abot) aenv
+let nr_bot aenv = Memory.map (fun _a -> val_bot) aenv
 
-let print_abs_val idx a =
+let print_abs_val a =
   let s =
     match a with Atop -> "⊤" | Abot -> "⊥" | Apos -> "Apos" | Aneg -> "Aneg"
   in
-  Printf.printf "amem[%d] = %s\n" idx s
+  Printf.printf "%s\n" s
 
 let abs_eq a b =
   match (a, b) with
@@ -92,6 +101,6 @@ let abs_eq a b =
   | _ -> false
 
 let%test "abs eq 1" = abs_eq Abot Abot
-let%test "abs eq 2" = abs_eq Apos (val_cnst 10)
+let%test "abs eq 2" = abs_eq Apos (val_cnst (Int 10))
 
 (* TODO: tests for other operators as well *)

@@ -7,38 +7,45 @@ module type Domain = sig
 
   val val_bot : abs_val
   val val_top : abs_val
-  val val_cnst : const -> abs_val
+  val val_cnst : Language.value -> abs_val
   val val_incl : abs_val -> abs_val -> bool
   val val_join : abs_val -> abs_val -> abs_val
   val val_uop : uop -> abs_val -> abs_val
   val val_binop : bop -> abs_val -> abs_val -> abs_val
-  val val_sat : rel -> const -> abs_val -> abs_val
-  val nr_is_le : abs_val array -> abs_val array -> bool
-  val nr_bot : abs_val array -> abs_val array
-  val nr_is_bot : abs_val array -> bool
-  val nr_join : abs_val array -> abs_val array -> abs_val array
-  val print_abs_val : int -> abs_val -> unit
+  val val_sat : rel -> Language.value -> abs_val -> abs_val
+  val nr_is_le : abs_val Memory.t -> abs_val Memory.t -> bool
+  val nr_bot : abs_val Memory.t -> abs_val Memory.t
+  val nr_is_bot : abs_val Memory.t -> bool
+  val nr_join : abs_val Memory.t -> abs_val Memory.t -> abs_val Memory.t
+  val print_abs_val : abs_val -> unit
 end
 
 (* The Analyzer module is a functor, i.e., a module parametrized by the analysis domain to be used. *)
 module Analyzer (Dom : Domain) = struct
   (**Instantiate the print function for the analysis domain *)
-  let print_abs_val idx arr = Dom.print_abs_val idx arr.(idx)
+  let print_abs_val value = Dom.print_abs_val value
 
   (** Analysis of expressions in the abstract domain *)
   let rec abs_expr expr aenv =
     match expr with
-    | Const c -> Dom.val_cnst c
-    | Var x -> read_mem x aenv
+    | Const c -> Dom.val_cnst (Int c)
+    | Var x -> read_mem (Stack x) aenv
     | Bop (op, e1, e2) -> Dom.val_binop op (abs_expr e1 aenv) (abs_expr e2 aenv)
     | Uop (op, e) -> Dom.val_uop op (abs_expr e aenv)
+    | Malloc site ->
+        let k = new_heap_addr site aenv in
+        read_mem k (write_mem k Dom.val_top aenv)
+    | Ref _ -> Dom.val_top
+    | Deref x -> read_mem x aenv
 
   (** Analysis of conditionals in the abstract domain *)
-  let abs_cond (rel, var, cnst) aenv =
-    print_cond (rel, var, cnst);
-    let new_aval = Dom.val_sat rel cnst (read_mem var aenv) in
-    if new_aval = Dom.val_bot then Dom.nr_bot aenv
-    else write_mem var new_aval aenv
+  let abs_cond (rel, v0, v1) aenv =
+    match (v0, v1) with
+    | Int _, Address a ->
+        let new_aval = Dom.val_sat rel v0 (read_mem a aenv) in
+        if new_aval = Dom.val_bot then Dom.nr_bot aenv
+        else write_mem a new_aval aenv
+    | _, _ -> aenv
 
   (** Helper function to negate cond, language-dependent *)
   let negate_cond cond =

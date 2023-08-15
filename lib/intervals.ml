@@ -5,19 +5,21 @@ open Language
 type bound = Val of int | Inf_Pos | Inf_Neg
 type abs_val = Interval of bound * bound
 
-let print_abs_val idx (Interval (low, hi)) =
+let print_abs_val (Interval (low, hi)) =
   let print_val_ext a =
     match a with Inf_Neg -> "-∞" | Inf_Pos -> "+∞" | Val v -> string_of_int v
   in
   let s = "[" ^ print_val_ext low ^ ", " ^ print_val_ext hi ^ "]" in
-  Printf.printf "amem[%d] = %s\n" idx s
+  Printf.printf "%s\n" s
 
 (* The empty interval is represented by [+inf,-inf],
    out of all possible empty intervals. This value is
    used for normalization. *)
 let val_bot = Interval (Inf_Pos, Inf_Neg)
 let val_top = Interval (Inf_Neg, Inf_Pos)
-let val_cnst c = Interval (Val c, Val c)
+
+let val_cnst value =
+  match value with Int c -> Interval (Val c, Val c) | _ -> val_top
 
 let le_ext a b =
   match (a, b) with
@@ -107,45 +109,52 @@ let val_uop op (Interval (l, h)) =
 let%test "- [1, 2] = [-2, -1]" =
   Interval (Val (-2), Val (-1)) = val_uop Minus (Interval (Val 1, Val 2))
 
-let val_sat cond cnst (Interval (l, h)) =
-  match cond with
-  | Lt ->
-      if le_ext (Val cnst) l || Val cnst = l then val_bot
-      else Interval (l, min (Val cnst) h)
-  | Le -> if le_ext (Val cnst) l then val_bot else Interval (l, min (Val cnst) h)
-  | Gt ->
-      if le_ext h (Val cnst) || Val cnst = h then val_bot
-      else Interval (max (Val cnst) l, h)
-  | Ge -> if le_ext h (Val cnst) then val_bot else Interval (max (Val cnst) l, h)
+let val_sat cond value (Interval (l, h)) =
+  match (cond, value) with
+  | Lt, Int v ->
+      if le_ext (Val v) l || Val v = l then val_bot
+      else Interval (l, min (Val v) h)
+  | Le, Int v ->
+      if le_ext (Val v) l then val_bot else Interval (l, min (Val v) h)
+  | Gt, Int v ->
+      if le_ext h (Val v) || Val v = h then val_bot
+      else Interval (max (Val v) l, h)
+  | Ge, Int v ->
+      if le_ext h (Val v) then val_bot else Interval (max (Val v) l, h)
+  (* Cannot infer more information if presented with an address *)
+  | _, _ -> Interval (l, h)
 
 let%test "Le 10 [1, 100] = [1, 10]" =
-  Interval (Val 1, Val 10) = val_sat Le 10 (Interval (Val 1, Val 100))
+  Interval (Val 1, Val 10) = val_sat Le (Int 10) (Interval (Val 1, Val 100))
 
 let%test "Gt 10 [20, 30] = [20, 30]" =
-  Interval (Val 20, Val 30) = val_sat Gt 10 (Interval (Val 20, Val 30))
+  Interval (Val 20, Val 30) = val_sat Gt (Int 10) (Interval (Val 20, Val 30))
 
 let%test "Gt 10 [-oo, 5] = [+oo, -oo]" =
-  Interval (Inf_Pos, Inf_Neg) = val_sat Gt 10 (Interval (Inf_Neg, Val 5))
+  Interval (Inf_Pos, Inf_Neg) = val_sat Gt (Int 10) (Interval (Inf_Neg, Val 5))
 
 let%test "Le 10 ((Le 10 [1, 1]) + [1, 1]) = [2, 2]" =
   Interval (Val 2, Val 2)
-  = val_sat Le 10
+  = val_sat Le (Int 10)
       (val_binop Add
-         (val_sat Le 10 (Interval (Val 1, Val 1)))
+         (val_sat Le (Int 10) (Interval (Val 1, Val 1)))
          (Interval (Val 1, Val 1)))
 
 let%test "Le 10 [-oo, +oo] = [-oo, 10]" =
-  Interval (Inf_Neg, Val 10) = val_sat Le 10 (Interval (Inf_Neg, Inf_Pos))
+  Interval (Inf_Neg, Val 10) = val_sat Le (Int 10) (Interval (Inf_Neg, Inf_Pos))
 
 (* Decide whether the abstract env1 <=# env2, i.e., for all (a,b) in abs1 x abs2. a <=# b *)
-let nr_is_le aenv1 aenv2 = Array.for_all2 val_incl aenv1 aenv2
+let nr_is_le aenv1 aenv2 =
+  Memory.compare (fun v1 v2 -> if val_incl v1 v2 then -1 else 1) aenv1 aenv2
+  == -1
 
 (* Abstract join operation on envs, producing a new abstract env *)
-let nr_join aenv1 aenv2 = Array.map2 val_join aenv1 aenv2
+let nr_join aenv1 aenv2 =
+  Memory.union (fun _k v1 v2 -> Some (val_join v1 v2)) aenv1 aenv2
 
 (* Tests whether the abstract env describes the empty set of stores, that is,
    at least one of its variables is bottom *)
-let nr_is_bot aenv = Array.exists (fun a -> a = val_bot) aenv
+let nr_is_bot aenv = Memory.exists (fun _k v -> v = val_bot) aenv
 
 (* Brings an abstract env to bottom *)
-let nr_bot aenv = Array.map (fun _a -> val_bot) aenv
+let nr_bot aenv = Memory.map (fun _a -> val_bot) aenv
