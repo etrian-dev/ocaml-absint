@@ -36,7 +36,7 @@ let rec sem_expr expr mem =
   | Malloc site ->
       let heap_addr = new_heap_addr site mem in
       (Address heap_addr, write_mem heap_addr (Int 0) mem)
-  | Ref var -> (Address (Stack var), mem)
+  | Ref addr -> (Address addr, mem)
   | Deref addr -> (read_mem addr mem, mem)
 
 (* Semantic of a relation: a function rel -> expr -> expr -> bool *)
@@ -46,6 +46,8 @@ let sem_rel rel v0 v1 =
   | Le -> v0 <= v1
   | Gt -> v0 > v1
   | Ge -> v0 >= v1
+  | Eq -> v0 == v1
+  | Ne -> v0 != v1
 
 (* Semantic of a condition: a function cond -> mem -> bool *)
 let sem_cond (rel, v0, v1) = sem_rel rel v0 v1

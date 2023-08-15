@@ -3,7 +3,7 @@ type const = label
 type var = const
 type bop = Add | Sub | Mul | Div
 type uop = Minus
-type rel = Lt | Le | Gt | Ge
+type rel = Lt | Le | Gt | Ge | Eq | Ne
 type site = var
 type heap_address = site * site
 type address = Stack of site | Heap of heap_address
@@ -15,7 +15,7 @@ type expr =
   | Bop of bop * expr * expr
   | Uop of uop * expr
   | Malloc of site
-  | Ref of site
+  | Ref of address
   | Deref of address
 
 type cond = rel * value * value

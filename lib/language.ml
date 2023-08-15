@@ -3,7 +3,7 @@ type const = int
 type var = int
 type bop = Add | Sub | Mul | Div
 type uop = Minus
-type rel = Lt | Le | Gt | Ge
+type rel = Lt | Le | Gt | Ge | Eq | Ne
 type site = int
 type heap_address = site * int
 type address = Stack of var | Heap of heap_address
@@ -15,7 +15,7 @@ type expr =
   | Bop of bop * expr * expr
   | Uop of uop * expr
   | Malloc of site
-  | Ref of var
+  | Ref of address
   | Deref of address
 
 type cond = rel * value * value
@@ -70,6 +70,12 @@ let print_value v =
 
 let print_cond (rel, v0, v1) =
   let rel_str =
-    match rel with Lt -> "<" | Le -> "<=" | Gt -> ">" | Ge -> ">="
+    match rel with
+    | Lt -> "<"
+    | Le -> "<="
+    | Gt -> ">"
+    | Ge -> ">="
+    | Eq -> "=="
+    | Ne -> "!="
   in
   Printf.printf "%s %s %s" (print_value v0) rel_str (print_value v1)
