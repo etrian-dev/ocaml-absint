@@ -50,6 +50,13 @@ let intersect_pto pto1 pto2 =
       Pto (List.filter_map (fun x -> List.find_opt (fun y -> y = x) l2) l1)
   | _ -> pto_top
 
+let join_ptos pto1 pto2 =
+  match (pto1, pto2) with
+  | Unknown, Unknown -> Unknown
+  | Unknown, Pto _ -> pto2
+  | Pto _, Unknown -> pto1
+  | Pto l1, Pto l2 -> Pto (List.merge cmp_ptos l1 l2)
+
 let val_cnst value =
   match value with
   | Int _ -> pto_bot
@@ -110,6 +117,8 @@ module Points_To (Dom : Domain) = struct
             (abs_cond (Abstract_Analyzer.negate_cond cond) pre)
         in
         (* Join the pto sets for each variable in the memory *)
-        pre
+        Memory.union
+          (fun _k pto1 pto2 -> Some (join_ptos pto1 pto2))
+          then_aenv else_aenv
     | _ -> pre
 end

@@ -88,4 +88,9 @@ end
 val read_mem : address -> 'a Memory.t -> 'a
 val write_mem : Memory.key -> 'a -> 'a Memory.t -> 'a Memory.t
 val new_heap_addr : site -> 'a Memory.t -> address
+val string_of_addr : address -> string
+val string_of_value : value -> string
+val print_addr : address -> unit
+val print_value : value -> unit
 val print_cond : rel * value * value -> unit
+val dump_mem : (address -> string) -> ('a -> string) -> 'a Memory.t -> unit

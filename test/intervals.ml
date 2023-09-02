@@ -1,6 +1,6 @@
-open Absint_lib.Analyzer.Interval_Analyzer
-open Absint_lib.Intervals
-open Absint_lib.Language
+(* open Absint_lib.Analyzer.Interval_Analyzer *)
+(* open Absint_lib.Intervals *)
+(* open Absint_lib.Language *)
 
 (* let mem_init size abs_val =
      Memory.add_seq (Seq.init size (fun n -> (Stack n, abs_val))) Memory.empty
@@ -10,18 +10,19 @@ open Absint_lib.Language
        (fun k _v -> match k with Stack n -> n >= start && n <= endv | _ -> false)
        mem
 *)
-let pp_bound b = function
-  | Inf_Neg -> Fmt.pf b "-oo"
-  | Inf_Pos -> Fmt.pf b "+oo"
-  | Val v -> Fmt.pf b "%d" v
+(* let pp_bound b = function
+   | Inf_Neg -> Fmt.pf b "-oo"
+   | Inf_Pos -> Fmt.pf b "+oo"
+   | Val v -> Fmt.pf b "%d" v
+*)
+(* let pp_interval x = function
+   | Interval (a, b) ->
+       let low_paren = match a with Val _ -> '[' | _ -> '(' in
+       let hi_paren = match b with Val _ -> ']' | _ -> ')' in
+       Fmt.pf x "%c%a, %a%c" low_paren pp_bound a pp_bound b hi_paren
+*)
+(* let abs_cmp a b = a = b *)
 
-let pp_interval x = function
-  | Interval (a, b) ->
-      let low_paren = match a with Val _ -> '[' | _ -> '(' in
-      let hi_paren = match b with Val _ -> ']' | _ -> ')' in
-      Fmt.pf x "%c%a, %a%c" low_paren pp_bound a pp_bound b hi_paren
-
-let abs_cmp a b = a = b
 (* let testable_abs_val = Alcotest.array (Alcotest.testable pp_interval abs_cmp) *)
 
 (*

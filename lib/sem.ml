@@ -1,5 +1,8 @@
 open Language
 
+let dump_mem =
+  Language.dump_mem Language.string_of_addr Language.string_of_value
+
 let extract_const value =
   match value with
   | Int c1 -> c1
@@ -82,7 +85,7 @@ let%test "skip cmd" =
 
 let%test "assign cmd" =
   let newmem = sem_cmd (Assign (Stack 0, Const 10)) init_mem in
-  Memory.find (Stack 0) newmem == Int 10
+  Memory.find (Stack 0) newmem = Int 10
   && Memory.for_all
        (fun _k v -> if Int 0 = v then true else false)
        (mem_sub 1 (Memory.cardinal newmem) newmem)
@@ -96,9 +99,9 @@ let%test "seq cmd" =
          ))
       init_mem
   in
-  Memory.find (Stack 0) newmem == Int 5
-  && Memory.find (Stack 1) newmem == Int 15
+  Memory.find (Stack 0) newmem = Int 5
+  && Memory.find (Stack 1) newmem = Int 15
   && Memory.equal
        (fun v1 v2 -> v1 = v2)
-       init_mem
+       (mem_sub 2 (Memory.cardinal init_mem) init_mem)
        (mem_sub 2 (Memory.cardinal newmem) newmem)

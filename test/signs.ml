@@ -1,14 +1,14 @@
-open Absint_lib.Analyzer.Signs_Analyzer
-open Absint_lib.Signs
-open Absint_lib.Language
+(* open Absint_lib.Analyzer.Signs_Analyzer
+   open Absint_lib.Signs
+   open Absint_lib.Language
 
-let pp a = function
-  | Atop -> Fmt.pf a "T"
-  | Abot -> Fmt.pf a "⊥"
-  | Apos -> Fmt.pf a ">= 0"
-  | Aneg -> Fmt.pf a "<= 0"
+   let pp a = function
+     | Atop -> Fmt.pf a "T"
+     | Abot -> Fmt.pf a "⊥"
+     | Apos -> Fmt.pf a ">= 0"
+     | Aneg -> Fmt.pf a "<= 0"
 
-let abs_cmp a b = a = b
+   let abs_cmp a b = a = b *)
 (* let testable_abs_val = Alcotest.array (Alcotest.testable pp abs_cmp) *)
 
 (* let mem_init size abs_val =

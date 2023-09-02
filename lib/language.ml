@@ -59,14 +59,16 @@ let new_heap_addr site memory =
   let new_inst = Memory.cardinal (Memory.filter filter_heap memory) in
   Heap (site, new_inst)
 
-(* TODO: add mem arg to print the value as well *)
-let print_addr addr =
+let string_of_addr addr =
   match addr with
   | Stack v -> "Stack(" ^ string_of_int v ^ ")"
   | Heap (s, i) -> "Heap(" ^ string_of_int s ^ ", " ^ string_of_int i ^ ")"
 
-let print_value v =
-  match v with Int x -> string_of_int x | Address a -> print_addr a
+let string_of_value v =
+  match v with Int x -> string_of_int x | Address a -> string_of_addr a
+
+let print_addr addr = Printf.printf "%s" (string_of_addr addr)
+let print_value value = Printf.printf "%s" (string_of_value value)
 
 let print_cond (rel, v0, v1) =
   let rel_str =
@@ -78,4 +80,11 @@ let print_cond (rel, v0, v1) =
     | Eq -> "=="
     | Ne -> "!="
   in
-  Printf.printf "%s %s %s" (print_value v0) rel_str (print_value v1)
+  Printf.printf "%s %s %s" (string_of_value v0) rel_str (string_of_value v1)
+
+let dump_mem addr_str val_str mem =
+  Printf.printf "**********\n";
+  Memory.iter
+    (fun k v -> Printf.printf "* Mem[%s] = %s\n" (addr_str k) (val_str v))
+    mem;
+  Printf.printf "**********\n"
